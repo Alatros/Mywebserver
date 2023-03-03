@@ -1,19 +1,20 @@
 #pragma once
-#include<sys/epoll.h>
-#include<vector>
+#include <sys/epoll.h>
+#include <vector>
 
+class Channel;
 class Epoll
 {
 private:
-    int epoll_fd;
+    int epfd;
     struct epoll_event *events;
-    
 public:
     Epoll();
-    Epoll(const Epoll &other) = delete;
-    Epoll(Epoll &&other) = delete;
     ~Epoll();
-    void add_fd(int fd, uint32_t events);
 
-    std::vector<epoll_event> wait(int timeout=-1);
+    void addFd(int fd, uint32_t op);
+    void updateChannel(Channel*);
+    // std::vector<epoll_event> poll(int timeout = -1);
+    std::vector<Channel*> poll(int timeout = -1);
 };
+

@@ -1,46 +1,57 @@
-#include"Socket.h"
-#include"Epoll.h"
-#include"utils.h"
-#include"NetAddress.h"
-#include<stdio.h>
+#include <stdio.h>
+#include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <errno.h>
+#include <vector>
 #include<memory>
+#include "util.h"
+#include "Epoll.h"
+#include "InetAddress.h"
+#include "Socket.h"
+#include "Channel.h"
 
+#define MAX_EVENTS 1024
 #define READ_BUF_SIZE 1024
 
-void handle_read_event(int);
 
-int main(){
-    std::unique_ptr<Socket> ser_sock(new Socket());
-    std::unique_ptr<NetAddress> ser_addr_ptr(new NetAddress("127.0.0.1",8888));
-    ser_sock->bind(*ser_addr_ptr);
-    ser_sock->listen();
-    std::unique_ptr<Epoll> ep(new Epoll());
-    ser_sock->set_nonblock();
-    ep->add_fd(ser_sock->get_fd(), EPOLLIN|EPOLLET);//边缘触发
-    while(1){
-        std::vector<epoll_event> events = ep->wait();
-        int n = events.size();
-        for(int i = 0;i < n; i++){
-            if(events[i].data.fd == ser_sock->get_fd()){//新客户端连接
-                NetAddress *clt_addr = new NetAddress();
-                Socket *clt_sock = new Socket(ser_sock->accept(*clt_addr));
-                printf("new client: %s:%d\n", clt_addr->get_ip(), clt_addr->get_port());
-                clt_sock->set_nonblock();
-                ep->add_fd(clt_sock->get_fd(), EPOLLIN|EPOLLET);
-                delete clt_addr;
-            }
-            else if(events[i].events & EPOLLIN){//客户端发送数据
-                handle_read_event(events[i].data.fd);
+void handleReadEvent(int);
+
+int main() {
+    Socket *serv_sock = new Socket();
+    InetAddress *serv_addr = new InetAddress("127.0.0.1", 8888);
+    serv_sock->bind(serv_addr);
+    serv_sock->listen();    
+    Epoll *ep = new Epoll();
+    serv_sock->setnonblocking();
+    Channel *servChannel = new Channel(ep, serv_sock->getFd());
+    servChannel->enableReading();
+    while(true){
+        std::vector<Channel*> activeChannels = ep->poll();
+        int nfds = activeChannels.size();
+        for(int i = 0; i < nfds; ++i){
+            int chfd = activeChannels[i]->getFd();
+            if(chfd == serv_sock->getFd()){        //新客户端连接
+                InetAddress *clnt_addr = new InetAddress();      //会发生内存泄露！没有delete
+                Socket *clnt_sock = new Socket(serv_sock->accept(clnt_addr));       //会发生内存泄露！没有delete
+                printf("new client fd %d! IP: %s Port: %d\n", clnt_sock->getFd(), inet_ntoa(clnt_addr->addr.sin_addr), ntohs(clnt_addr->addr.sin_port));
+                clnt_sock->setnonblocking();
+                Channel *clntChannel = new Channel(ep, clnt_sock->getFd());
+                clntChannel->enableReading();
+            } else if(activeChannels[i]->getRevents() & EPOLLIN){      //可读事件
+                handleReadEvent(activeChannels[i]->getFd());
+            } else{         //其他事件，之后的版本实现
+                printf("something else happened\n");
             }
         }
     }
+    delete serv_sock;
+    delete serv_addr;
     return 0;
 }
 
 
-void handle_read_event(int fd){
+void handleReadEvent(int fd){
     char buf[READ_BUF_SIZE];
     while(1){
         ssize_t read_size = read(fd, buf, READ_BUF_SIZE);
@@ -67,5 +78,4 @@ void handle_read_event(int fd){
             break;
         }
     }
-    
 }
