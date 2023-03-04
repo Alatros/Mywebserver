@@ -1,5 +1,15 @@
+src  = $(wildcard src/*.cpp)
+
 server:
-	g++ src/util.cpp client.cpp src/Buffer.cpp src/Socket.cpp src/InetAddress.cpp -o client && \
-	g++ src/util.cpp server.cpp src/Epoll.cpp src/InetAddress.cpp src/Socket.cpp src/Channel.cpp src/Eventloop.cpp src/Server.cpp src/Acceptor.cpp src/Connection.cpp src/Buffer.cpp -o server
+	clang++ -pthread \
+	-o server \
+	$(src) \
+	server.cpp
+
+client:
+	clang++ src/util.cpp src/Buffer.cpp src/Socket.cpp src/InetAddress.cpp \
+	-o client \
+	client.cpp
+
 clean:
-	rm server && rm client
+	rm -f server client

@@ -18,7 +18,7 @@ Channel::~Channel()
 }
 
 void Channel::enableReading(){
-    events = EPOLLIN | EPOLLET;
+    events |= EPOLLIN|EPOLLPRI;//带外数据
     el->updateChannel(this);
 }
 
@@ -45,10 +45,20 @@ void Channel::setRevents(uint32_t _ev){
     revents = _ev;
 }
 
-void Channel::setCallback(std::function<void()>& _cb){
-    callback = std::move(_cb);
+void Channel::setreadCallback(std::function<void()>& _cb){
+    readCallback = std::move(_cb);
 }
 
 void Channel::handleEvent(){
-    callback();
+    // callback();
+    if(revents & (EPOLLIN|EPOLLPRI|EPOLLERR)){
+        el->addTask(readCallback);
+    }
+    if(revents & EPOLLOUT){
+        el->addTask(writeCallback);
+    }
+}
+
+void Channel::useET(){
+    events |= EPOLLET;
 }

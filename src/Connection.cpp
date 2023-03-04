@@ -12,7 +12,8 @@
 Connection::Connection(Eventloop* _loop,Socket* _socket):loop(_loop),socket(_socket){
     channel = new Channel(loop,socket->getFd());
     std::function<void()> f = std::bind(&Connection::echo, this, socket->getFd());
-    channel->setCallback(f);
+    channel->useET();
+    channel->setreadCallback(f);
     channel->enableReading();
     readBuffer = new Buffer();
 }
@@ -45,6 +46,11 @@ void Connection::echo(int fd){
         else if(read_size==-1 && (errno == EINTR)){//被信号中断
             printf("client %d interrupted by signal\n", fd);
             continue;
+        }
+        else {//其他错误
+            printf("client %d read error\n", fd);
+            removeConnectionCallback(socket);
+            break;
         }
     }
 }

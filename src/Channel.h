@@ -12,7 +12,8 @@ private:
     uint32_t revents;
     bool inEpoll;
 
-    std::function<void()> callback;
+    std::function<void()> readCallback;
+    std::function<void()> writeCallback;
 public:
     Channel(Eventloop *, int);
     ~Channel();
@@ -26,8 +27,8 @@ public:
     void setInEpoll();
 
     void setRevents(uint32_t);
-
+    void useET();
     void handleEvent();
-    void setCallback(std::function<void()>&);
+    void setreadCallback(std::function<void()>&);
 };
 
