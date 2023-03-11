@@ -33,13 +33,3 @@ ThreadPool::~ThreadPool() {
     }
 }
 
-void ThreadPool::addTask(std::function<void ()> task){
-    {
-        std::unique_lock<std::mutex> lock(this->mutex);
-        if (this->stop) {
-            throw std::runtime_error("ThreadPool is stopped");
-        }
-        this->tasks.emplace(task);
-    }
-    this->condition.notify_one();//notify one thread
-}
