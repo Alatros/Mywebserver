@@ -8,7 +8,7 @@ class Eventloop{
 private:
     Epoll* ep;
     bool quit;
-    ThreadPool *pool;
+    // ThreadPool *pool;
 public:
     Eventloop();
     ~Eventloop();

@@ -14,8 +14,11 @@ public:
     void listen();
     void setnonblocking();
 
+    bool isNonblocking();
+
     int accept(InetAddress*);
     void connect(InetAddress*);
+    void connect(const char*, int);
 
     int getFd();
 };

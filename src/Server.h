@@ -2,6 +2,7 @@
 
 #include<map>
 #include<vector>
+#include<functional>
 class ThreadPool;
 class Eventloop;
 class Socket;
@@ -15,6 +16,8 @@ class Server{
         std::map<int,Connection*> connectMap;
         std::vector<Eventloop*> subReactors;
         ThreadPool *threadPool;
+
+        std::function<void(Connection*)> onConnectionCallback;
     public:
         Server(Eventloop*);
         ~Server();
@@ -22,4 +25,5 @@ class Server{
         void handleReadEvent(int);
         void newConnection(Socket*);
         void removeConnection(Socket*);
+        void setOnConnectionCallback(std::function<void(Connection*)> cb);
 };

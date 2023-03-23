@@ -3,12 +3,12 @@
 
 Eventloop::Eventloop(){
     ep = new Epoll();
-    pool = new ThreadPool();
+    // pool = new ThreadPool();
     quit = false;
 }
 
 Eventloop::~Eventloop(){
-    delete pool;
+    // delete pool;
     delete ep;
 }
 
@@ -26,6 +26,6 @@ void Eventloop::updateChannel(Channel *channel){
     ep->updateChannel(channel);
 }
 
-void Eventloop::addTask(std::function<void()>& task){
-    pool->addTask(task);
-}
+// void Eventloop::addTask(std::function<void()>& task){
+//     pool->addTask(task);
+// }

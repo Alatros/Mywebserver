@@ -45,17 +45,17 @@ void Channel::setRevents(uint32_t _ev){
     revents = _ev;
 }
 
-void Channel::setreadCallback(std::function<void()>& _cb){
+void Channel::setreadCallback(std::function<void()> const & _cb){
     readCallback = std::move(_cb);
 }
 
 void Channel::handleEvent(){
     // callback();
     if(revents & (EPOLLIN|EPOLLPRI|EPOLLERR)){
-        el->addTask(readCallback);
+        readCallback();
     }
     if(revents & EPOLLOUT){
-        el->addTask(writeCallback);
+        writeCallback();
     }
 }
 

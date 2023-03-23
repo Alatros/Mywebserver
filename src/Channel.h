@@ -29,6 +29,6 @@ public:
     void setRevents(uint32_t);
     void useET();
     void handleEvent();
-    void setreadCallback(std::function<void()>&);
+    void setreadCallback(std::function<void()> const&);
 };
 

@@ -37,10 +37,19 @@ int Socket::accept(InetAddress *addr){
     return clnt_sockfd;
 }
 
-void::Socket::connect(InetAddress *addr){
+void Socket::connect(InetAddress *addr){
     errorif(::connect(fd, (sockaddr*)&addr->addr, addr->addr_len) == -1, "socket connect error");
+}
+
+void Socket::connect(const char *ip, int port){
+    InetAddress addr(ip, port);
+    connect(&addr);
 }
 
 int Socket::getFd(){
     return fd;
+}
+
+bool Socket::isNonblocking(){
+    return fcntl(fd, F_GETFL) & O_NONBLOCK;
 }
